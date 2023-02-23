@@ -67,7 +67,7 @@ async def photo_handler(message: types.Message):
     async with transactions.in_transaction():
         await Photo.create(id=message.message_id, author=author)
         reply_markup = create_like_keyboard_markup(message.message_id, 0, 0)
-        await message.answer("Тебе понравилась эта картинка?", reply_markup=reply_markup)
+        await message.reply("Тебе понравилась эта картинка?", reply_markup=reply_markup)
 
 
 @dp.message_handler(commands=["rating"])
