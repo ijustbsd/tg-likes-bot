@@ -15,8 +15,11 @@ bot = Bot(token=settings.BOT_TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.callback_query_handler(vote_callback.filter(action=["up", "down"]))
-async def vote_callback_handler(callback_query: types.CallbackQuery, callback_data: dict[str, str]):
+@dp.callback_query_handler(vote_callback.filter(action=[VoteActionEnum.UP, VoteActionEnum.DOWN]))
+async def vote_callback_handler(
+    callback_query: types.CallbackQuery,
+    callback_data: dict[str, str],
+):
     vote_callback_data = VoteCallbackData(**callback_data)
     user, _ = await TelegramUser.get_or_create_from_tg_user(callback_query.from_user)
 
@@ -74,5 +77,8 @@ async def photo_handler(message: types.Message):
 async def rating_handler(message: types.Message):
     text = "*Рейтинг участников:*\n"
     rating = await get_rating()
+    if not rating:
+        await message.reply("Не найдено ни одного участника!")
+        return
     text += "\n".join([f"{name}: {votes}" for name, votes in rating.items()])
     await bot.send_message(message.chat.id, text, parse_mode="Markdown")
