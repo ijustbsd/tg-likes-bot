@@ -1,0 +1,8 @@
+__pycache__
+.mypy_cache
+
+.venv
+.env
+
+.git
+pg-data

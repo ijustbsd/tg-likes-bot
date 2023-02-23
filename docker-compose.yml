@@ -1,5 +1,6 @@
 version: "3.9"
 services:
+
   db:
     image: postgres:14
     ports:
@@ -10,3 +11,11 @@ services:
       POSTGRES_DB: bot
     volumes:
       - "./pg-data:/var/lib/postgresql/data"
+    # restart: always
+
+  bot:
+    build: .
+    env_file:
+      - .env
+    command: python run.py
+    # restart: always
