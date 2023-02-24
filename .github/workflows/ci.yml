@@ -60,11 +60,22 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: bot
+          POSTGRES_PASSWORD: bot
+          POSTGRES_DB: bot
+
     container:
       image: ${{ needs.build.outputs.image }}
+      env:
+        DB_HOST: postgres
 
     steps:
       - name: Run tests
         run: |
           cd /app
-          pytest
+          scripts/lint.sh
+          scripts/test.sh
