@@ -4,7 +4,7 @@ from pydantic import BaseSettings, root_validator
 
 
 class Settings(BaseSettings):
-    BOT_TOKEN: str = ""
+    BOT_TOKEN: str = "1337:BOT_TOKEN"
 
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
