@@ -1,0 +1,18 @@
+{
+    "repositoryUrl": "https://github.com/ijustbsd/tg-likes-bot.git",
+    "plugins": [
+        [
+            "@semantic-release/commit-analyzer",
+            {
+                "preset": "angular",
+                "releaseRules": [
+                    {
+                        "release": "patch"
+                    }
+                ]
+            }
+        ],
+        "@semantic-release/release-notes-generator",
+        "@semantic-release/github"
+    ]
+}
