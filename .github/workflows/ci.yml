@@ -76,7 +76,7 @@ jobs:
     container:
       image: ${{ needs.build.outputs.image }}
       env:
-        DB_HOST: postgres
+        APP_DB_HOST: postgres
 
     steps:
       - name: Run tests
