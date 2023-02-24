@@ -43,10 +43,6 @@ class Photo(Model):
     dislikes = fields.IntField(default=0)
     created_at = fields.DatetimeField(auto_now=True)
 
-    @property
-    def rating(self) -> int:
-        return self.likes + self.dislikes
-
 
 class Vote(Model):
     user: fields.ForeignKeyRelation["TelegramUser"] = fields.ForeignKeyField(

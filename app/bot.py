@@ -68,7 +68,7 @@ async def vote_callback_handler(
 async def photo_handler(message: types.Message):
     author, _ = await TelegramUser.get_or_create_from_tg_user(message.from_user)
     async with transactions.in_transaction():
-        await Photo.create(id=message.message_id, author=author)
+        await Photo.get_or_create(id=message.message_id, author=author)
         reply_markup = create_like_keyboard_markup(message.message_id, 0, 0)
         await message.reply("Тебе понравилась эта картинка?", reply_markup=reply_markup)
 
