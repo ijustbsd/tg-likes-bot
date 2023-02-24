@@ -29,9 +29,9 @@ class TelegramUser(Model):
         return await cls.get_or_create(
             id=tg_user.id,
             defaults={
-                "username": tg_user.username,
-                "first_name": tg_user.first_name,
-                "last_name": tg_user.last_name,
+                "username": tg_user.username or "",
+                "first_name": tg_user.first_name or "",
+                "last_name": tg_user.last_name or "",
             },
         )
 

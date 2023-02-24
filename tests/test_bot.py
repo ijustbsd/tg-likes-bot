@@ -119,6 +119,117 @@ async def test_vote_callback_handler(
     answer_callback_query_mock.assert_called_with(callback_query.id, "Твой голос учтён!")
 
 
+@pytest.mark.parametrize(
+    ("action",),
+    [
+        (schemas.VoteActionEnum.UP,),
+        (schemas.VoteActionEnum.DOWN,),
+    ],
+)
+async def test_vote_callback_handler__vote_already_exist(
+    mocker,
+    callback_query,
+    action,
+):
+    LIKES = 13
+    DISLIKES = -7
+    RATING = 17
+    VALUE = 42
+    answer_callback_query_mock = mocker.patch("app.bot.bot.answer_callback_query")
+    await callback_query.from_user.save()
+    author = factories.TelegramUserFactory(rating=RATING)
+    await author.save()
+    photo = factories.PhotoFactory(author=author, likes=LIKES, dislikes=DISLIKES)
+    await photo.save()
+    vote = factories.VoteFactory(user=callback_query.message.from_user, photo=photo, value=VALUE)
+    await vote.save()
+
+    callback_data = {
+        "message_id": photo.id,
+        "action": action,
+    }
+    await bot.vote_callback_handler(callback_query, callback_data)
+
+    await photo.refresh_from_db()
+    await author.refresh_from_db()
+    assert photo.likes == LIKES
+    assert photo.dislikes == DISLIKES
+    assert author.rating == RATING
+    vote = await models.Vote.get().prefetch_related("user", "photo")
+    assert vote.photo == photo
+    assert vote.user == callback_query.from_user
+    assert vote.value == VALUE
+    answer_callback_query_mock.assert_called_with(callback_query.id, "Первое слово дороже второго!")
+
+
+@pytest.mark.parametrize(
+    ("action",),
+    [
+        (schemas.VoteActionEnum.UP,),
+        (schemas.VoteActionEnum.DOWN,),
+    ],
+)
+async def test_vote_callback_handler__author_vote(
+    mocker,
+    callback_query,
+    action,
+):
+    LIKES = 13
+    DISLIKES = -7
+    RATING = callback_query.from_user.rating
+    VALUE = 42
+    answer_callback_query_mock = mocker.patch("app.bot.bot.answer_callback_query")
+    await callback_query.from_user.save()
+    photo = factories.PhotoFactory(author=callback_query.message.from_user, likes=LIKES, dislikes=DISLIKES)
+    await photo.save()
+    vote = factories.VoteFactory(user=callback_query.message.from_user, photo=photo, value=VALUE)
+    await vote.save()
+
+    callback_data = {
+        "message_id": photo.id,
+        "action": action,
+    }
+    await bot.vote_callback_handler(callback_query, callback_data)
+
+    await photo.refresh_from_db()
+    await callback_query.from_user.refresh_from_db()
+    assert photo.likes == LIKES
+    assert photo.dislikes == DISLIKES
+    assert callback_query.from_user.rating == RATING
+    vote = await models.Vote.get().prefetch_related("user", "photo")
+    assert vote.photo == photo
+    assert vote.user == callback_query.from_user
+    assert vote.value == VALUE
+    answer_callback_query_mock.assert_called_with(callback_query.id, "Тебя никто не спрашивал!")
+
+
+@pytest.mark.parametrize(
+    ("action",),
+    [
+        (schemas.VoteActionEnum.UP,),
+        (schemas.VoteActionEnum.DOWN,),
+    ],
+)
+async def test_vote_callback_handler__photo_not_exist(
+    mocker,
+    callback_query,
+    action,
+):
+    answer_callback_query_mock = mocker.patch("app.bot.bot.answer_callback_query")
+    await callback_query.from_user.save()
+    author = factories.TelegramUserFactory()
+    await author.save()
+    await factories.PhotoFactory(id=42, author=author).save()
+
+    callback_data = {
+        "message_id": 123456789,  # not exist photo's id
+        "action": action,
+    }
+    await bot.vote_callback_handler(callback_query, callback_data)
+
+    answer_callback_query_mock.assert_called_with(callback_query.id, "Что-то пошло не так 💩")
+
+
 async def test_rating_handler(mocker, message):
     send_message_mock = mocker.patch("app.bot.bot.send_message")
     await factories.TelegramUserFactory(

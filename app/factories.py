@@ -24,3 +24,12 @@ class PhotoFactory(factory.Factory):
     dislikes = factory.fuzzy.FuzzyInteger(-10, 0)
     rating = factory.fuzzy.FuzzyInteger(-42, 42)
     created_at = factory.Faker("date")
+
+
+class VoteFactory(factory.Factory):
+    class Meta:
+        model = models.Vote
+
+    user = factory.SubFactory(TelegramUserFactory)
+    photo = factory.SubFactory(PhotoFactory)
+    value = factory.fuzzy.FuzzyChoice([-1, 1])
