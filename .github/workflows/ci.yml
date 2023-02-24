@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+
+env:
+  IMAGE_ID: ghcr.io/${{ github.repository_owner }}/tg-likes-bot
+
+jobs:
+
+  version:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+  
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v2
+        if: github.ref == 'refs/heads/master'
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs:
+      - version
+
+    runs-on: ubuntu-latest
+    
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Build and push the Docker image
+        id: build
+        run: |
+          VERSION=$(git describe --tags --always | cut -c 2-)
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker build . --file Dockerfile --tag $IMAGE_ID:$VERSION --tag $IMAGE_ID:latest
+          docker push $IMAGE_ID:$VERSION
+          echo "::set-output name=image::$IMAGE_ID:$VERSION"
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+  quality:
+    needs:
+      - build
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ${{ needs.build.outputs.image }}
+
+    steps:
+      - name: Run tests
+        run: |
+          cd /app
+          pytest
