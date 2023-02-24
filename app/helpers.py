@@ -19,6 +19,13 @@ def create_like_keyboard_markup(
     return keyboard_markup
 
 
+def action_to_vote_value(action: VoteActionEnum) -> int:
+    return {
+        VoteActionEnum.UP: 1,
+        VoteActionEnum.DOWN: -1,
+    }[action]
+
+
 async def get_rating() -> dict[str, int]:
     rating = {}
     users = await TelegramUser.all().order_by("-rating")

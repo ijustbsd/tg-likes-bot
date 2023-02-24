@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, types
 from tortoise import exceptions, transactions
 
 from .config import settings
-from .helpers import create_like_keyboard_markup, get_rating
+from .helpers import action_to_vote_value, create_like_keyboard_markup, get_rating
 from .models import Photo, TelegramUser, Vote
 from .schemas import VoteActionEnum, VoteCallbackData, vote_callback
 
@@ -34,26 +34,12 @@ async def vote_callback_handler(
         return
 
     async with transactions.in_transaction():
-        vote_value = 1 if vote_callback_data.action == VoteActionEnum.UP else -1
+        vote_value = action_to_vote_value(vote_callback_data.action)
+        _, created = await Vote.create_user_vote(user=user, photo=photo, vote_value=vote_value)
 
-        _, created = await Vote.get_or_create(
-            user=user,
-            photo=photo,
-            defaults={"value": vote_value},
-        )
         if not created:
             await bot.answer_callback_query(callback_query.id, "Первое слово дороже второго!")
             return
-
-        if vote_value > 0:
-            photo.likes += vote_value
-            await photo.save(update_fields=["likes"])
-        elif vote_value < 0:
-            photo.dislikes += vote_value
-            await photo.save(update_fields=["dislikes"])
-
-        photo.author.rating += vote_value
-        await photo.author.save()
 
         markup = create_like_keyboard_markup(vote_callback_data.message_id, photo.likes, -photo.dislikes)
         await bot.edit_message_reply_markup(

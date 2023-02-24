@@ -1,3 +1,5 @@
+import typing as t
+
 from aiogram import types
 from tortoise import fields
 from tortoise.models import Model
@@ -53,3 +55,30 @@ class Vote(Model):
 
     class Meta:
         unique_together = (("user", "photo"),)
+
+    @classmethod
+    async def create_user_vote(
+        cls,
+        user: TelegramUser,
+        photo: Photo,
+        vote_value: int,
+    ) -> tuple[bool, t.Optional["Vote"]]:
+        vote, created = await cls.get_or_create(
+            user=user,
+            photo=photo,
+            defaults={"value": vote_value},
+        )
+        if not created:
+            return False, None
+
+        if vote_value > 0:
+            photo.likes += vote_value
+            await photo.save(update_fields=["likes"])
+        elif vote_value < 0:
+            photo.dislikes += vote_value
+            await photo.save(update_fields=["dislikes"])
+
+        photo.author.rating += vote_value
+        await photo.author.save()
+
+        return True, vote
