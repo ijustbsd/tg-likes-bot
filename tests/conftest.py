@@ -4,7 +4,7 @@ import pytest
 from tortoise import Tortoise
 
 from app import db
-from app.config import settings
+from app.config.settings import settings
 
 
 @pytest.fixture(scope="session")

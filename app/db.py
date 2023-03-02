@@ -1,7 +1,7 @@
 from aerich import Command
 from tortoise import Tortoise
 
-from .config import settings
+from .config.settings import settings
 
 
 async def init(create_db: bool = False) -> None:

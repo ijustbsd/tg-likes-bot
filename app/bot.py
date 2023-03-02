@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from tortoise import exceptions, transactions
 
-from .config import settings
+from .config.settings import settings
 from .helpers import action_to_vote_value, create_like_keyboard_markup, get_rating
 from .models import Photo, TelegramUser, Vote
 from .schemas import VoteActionEnum, VoteCallbackData, vote_callback

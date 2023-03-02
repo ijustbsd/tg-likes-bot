@@ -13,9 +13,33 @@ services:
       - "./pg-data:/var/lib/postgresql/data"
     # restart: always
 
-  bot:
-    build: .
-    env_file:
-      - .env
-    command: python run.py
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "bot"
+      RABBITMQ_DEFAULT_PASS: "bot"
     # restart: always
+
+  # celery:
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   command: celery -A app.tasks worker -l info
+  #   # restart: always
+
+  # celery-beat:
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   command: celery -A app.tasks beat -l info
+  #   # restart: always
+
+  # bot:
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   command: python run.py
+  #   # restart: always

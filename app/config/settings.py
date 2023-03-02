@@ -14,6 +14,17 @@ class Settings(BaseSettings):
 
     TORTOISE_ORM: dict[str, t.Any] = {}
 
+    RABBITMQ_PROTOCOL: str = "amqp"
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str = "bot"
+    RABBITMQ_PASSWORD: str = "bot"
+    RABBITMQ_VHOST: str = ""
+
+    RABBITMQ: dict[str, t.Any] = {}
+
+    TG_CHAT_ID: int = 0
+
     class Config:
         env_file = ".env"
         env_prefix = "APP_"
@@ -42,6 +53,16 @@ class Settings(BaseSettings):
                 },
             }
         )
+        values["RABBITMQ"].update(
+            {
+                "protocol": values["RABBITMQ_PROTOCOL"],
+                "host": values["RABBITMQ_HOST"],
+                "port": values["RABBITMQ_PORT"],
+                "user": values["RABBITMQ_USER"],
+                "password": values["RABBITMQ_PASSWORD"],
+                "vhost": values["RABBITMQ_VHOST"],
+            }
+        )
         return values
 
 
@@ -49,3 +70,5 @@ settings = Settings()
 
 # для aerich
 TORTOISE_ORM = settings.TORTOISE_ORM
+
+CELERY_BROKER_URL = "{protocol}://{user}:{password}@{host}:{port}/{vhost}".format_map(settings.RABBITMQ)

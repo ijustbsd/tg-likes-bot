@@ -6,5 +6,6 @@ __pycache__
 .env
 
 pg-data
+celerybeat-schedule.db
 
 .vscode

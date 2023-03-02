@@ -8,5 +8,6 @@ __pycache__
 
 .git
 pg-data
+celerybeat-schedule.db
 
 .vscode

@@ -1,3 +1,4 @@
+import datetime as dt
 import typing as t
 
 from aiogram import types
@@ -43,7 +44,7 @@ class Photo(Model):
     )
     likes = fields.IntField(default=0)
     dislikes = fields.IntField(default=0)
-    created_at = fields.DatetimeField(auto_now=True)
+    created_at = fields.DatetimeField(default=dt.datetime.utcnow)
 
 
 class Vote(Model):
@@ -82,3 +83,12 @@ class Vote(Model):
         await photo.author.save()
 
         return True, vote
+
+
+class MonthlyRatingMessage(Model):
+    year = fields.IntField()
+    month = fields.IntField()
+    message = fields.TextField()
+
+    class Meta:
+        unique_together = (("year", "month"),)

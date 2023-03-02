@@ -32,3 +32,20 @@ async def get_rating() -> dict[str, int]:
     for user in users:
         rating[user.name] = user.rating
     return rating
+
+
+def month_number_to_name(month: int) -> str:
+    return [
+        "январь",
+        "февраль",
+        "март",
+        "апрель",
+        "май",
+        "июнь",
+        "июль",
+        "август",
+        "сентябрь",
+        "октябрь",
+        "ноябрь",
+        "декабрь",
+    ][month - 1]
