@@ -33,3 +33,15 @@ class VoteFactory(factory.Factory):
     user = factory.SubFactory(TelegramUserFactory)
     photo = factory.SubFactory(PhotoFactory)
     value = factory.fuzzy.FuzzyChoice([-1, 1])
+
+
+class NotificationFactory(factory.Factory):
+    class Meta:
+        model = models.Notification
+
+    id = factory.fuzzy.FuzzyInteger(1, 100)
+    type = factory.fuzzy.FuzzyChoice(models.NotificationType)
+    text = factory.fuzzy.FuzzyText()
+    parameters: dict = {}
+    sent_at = factory.Faker("date")
+    created_at = factory.Faker("date")

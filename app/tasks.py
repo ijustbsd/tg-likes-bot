@@ -2,27 +2,28 @@ import asyncio
 import datetime as dt
 from collections import defaultdict
 
-from aiogram import Bot
 from celery import Celery, shared_task
 from tortoise import transactions
 
-from app.bot import bot
 from app.config.celery import app as celery_app
-from app.config.settings import settings
 from app.helpers import month_number_to_name
-from app.models import MonthlyRatingMessage, Photo
+from app.models import Notification, NotificationType, Photo
 
 
 def setup_periodic_tasks(sender: Celery, **_):
     sender.add_periodic_task(3600, send_monthly_rating_task.s())
+    sender.add_periodic_task(300, send_notifications_task.s())
 
 
-async def send_monthly_rating(bot: Bot):
+async def send_monthly_rating() -> None:
     today: dt.date = dt.datetime.utcnow().date()
     tomorrows_month: int = (today + dt.timedelta(days=1)).month
     if today.month == tomorrows_month:
         return
-    if await MonthlyRatingMessage.filter(year=today.year, month=today.month).exists():
+    if await Notification.filter(
+        type=NotificationType.MONTHLY_RATING,
+        parameters__contains=[{"year": today.year}, {"month": today.month}],
+    ).exists():
         return
     month_name = month_number_to_name(today.month).capitalize()
     text = f"{month_name} подходит к концу. Текущий рейтинг участников:\n"
@@ -37,14 +38,34 @@ async def send_monthly_rating(bot: Bot):
         return
     rating_sorted = sorted(rating.items(), key=lambda x: x[1], reverse=True)
     text += "\n".join([f"{name}: {votes}" for name, votes in rating_sorted])
-    async with transactions.in_transaction():
-        await bot.send_message(settings.TG_CHAT_ID, text, parse_mode="Markdown")
-        await MonthlyRatingMessage.create(year=today.year, month=today.month, message=text)
+    await Notification.create(
+        type=NotificationType.MONTHLY_RATING,
+        text=text,
+        parameters={"year": today.year, "month": today.month},
+    )
+
+
+async def send_notifications() -> None:
+    not_sent_notifications = await Notification.filter(sent_at__isnull=True)
+    for n in not_sent_notifications:
+        async with transactions.in_transaction():
+            notification = await Notification.select_for_update(skip_locked=True).get_or_none(id=n.id)  # type: ignore
+            if notification is None or notification.sent_at is not None:
+                continue
+            try:
+                await notification.send()
+            except Exception:
+                continue
 
 
 @shared_task
 def send_monthly_rating_task():
-    asyncio.run(send_monthly_rating(bot))
+    asyncio.run(send_monthly_rating())
+
+
+@shared_task
+def send_notifications_task():
+    asyncio.run(send_notifications())
 
 
 setup_periodic_tasks(celery_app)

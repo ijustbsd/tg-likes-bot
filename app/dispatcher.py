@@ -1,16 +1,14 @@
 import logging
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Dispatcher, types
 from tortoise import exceptions, transactions
 
-from .config.settings import settings
-from .helpers import action_to_vote_value, create_like_keyboard_markup, get_rating
-from .models import Photo, TelegramUser, Vote
-from .schemas import VoteActionEnum, VoteCallbackData, vote_callback
+from app.config.bot import bot
+from app.helpers import action_to_vote_value, create_like_keyboard_markup, get_rating
+from app.models import Photo, TelegramUser, Vote
+from app.schemas import VoteActionEnum, VoteCallbackData, vote_callback
 
 logging.basicConfig(level=logging.INFO)
-
-bot = Bot(token=settings.BOT_TOKEN)
 
 dp = Dispatcher(bot)
 

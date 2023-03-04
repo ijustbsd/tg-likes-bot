@@ -1,13 +1,10 @@
 from freezegun import freeze_time
 
 from app import factories, models, tasks
-from app.bot import bot
 from app.config.settings import settings
 
 
-async def test_send_monthly_rating_task(mocker):
-    settings.TG_CHAT_ID = -1234
-    send_message_mock = mocker.patch("app.bot.bot.send_message")
+async def test_send_monthly_rating_task():
     user1 = factories.TelegramUserFactory(first_name="Иван", last_name="Иванов")
     await user1.save()
     user2 = factories.TelegramUserFactory(first_name="Петр", last_name="Петров")
@@ -21,16 +18,15 @@ async def test_send_monthly_rating_task(mocker):
     photo4 = factories.PhotoFactory(author=user2, likes=99, dislikes=-10, created_at="2023-03-01")
     await photo4.save()
 
-    assert await models.MonthlyRatingMessage.all().count() == 0
+    assert await models.Notification.all().count() == 0
 
     with freeze_time("2023-02-27 12:34:56"):
-        await tasks.send_monthly_rating(bot)
+        await tasks.send_monthly_rating()
 
-    send_message_mock.assert_not_called()
-    assert await models.MonthlyRatingMessage.all().count() == 0
+    assert await models.Notification.all().count() == 0
 
     with freeze_time("2023-02-28 12:34:56"):
-        await tasks.send_monthly_rating(bot)
+        await tasks.send_monthly_rating()
 
     text = "\n".join(
         [
@@ -39,13 +35,54 @@ async def test_send_monthly_rating_task(mocker):
             "Иван Иванов: 6",
         ]
     )
-    send_message_mock.assert_called_with(-1234, text, parse_mode="Markdown")
-    send_message_mock.reset_mock()
-    assert await models.MonthlyRatingMessage.all().count() == 1
-    assert await models.MonthlyRatingMessage.get_or_none(year=2023, month=2, message=text)
+    notification = await models.Notification.get()
+    assert notification.type == models.NotificationType.MONTHLY_RATING
+    assert notification.text == text
+    assert notification.parameters == {"year": 2023, "month": 2}
+    assert notification.sent_at is None
 
     with freeze_time("2023-03-01 12:34:56"):
-        await tasks.send_monthly_rating(bot)
+        await tasks.send_monthly_rating()
 
+    assert await models.Notification.all().count() == 1
+
+
+async def test_send_notifications(mocker):
+    settings.TG_CHAT_ID = -1234
+    send_message_mock = mocker.patch("app.config.bot.bot.send_message")
+
+    assert await models.Notification.all().count() == 0
+    await tasks.send_notifications()
     send_message_mock.assert_not_called()
-    assert await models.MonthlyRatingMessage.all().count() == 1
+
+    await factories.NotificationFactory(sent_at="2022-09-01").save()
+    await tasks.send_notifications()
+    send_message_mock.assert_not_called()
+
+    notification = factories.NotificationFactory(text="Привет!", sent_at=None)
+    await notification.save()
+    await tasks.send_notifications()
+    send_message_mock.assert_called_with(-1234, "Привет!", parse_mode="Markdown")
+    await notification.refresh_from_db()
+    assert notification.sent_at is not None
+
+    send_message_mock.reset_mock()
+    await tasks.send_notifications()
+    send_message_mock.assert_not_called()
+
+
+async def test_send_notifications__error(mocker):
+    settings.TG_CHAT_ID = -1234
+    mocker.patch("app.config.bot.bot.send_message", side_effect=[RuntimeError, None])
+    notification = factories.NotificationFactory(sent_at=None)
+    await notification.save()
+
+    await tasks.send_notifications()
+
+    await notification.refresh_from_db()
+    assert notification.sent_at is None
+
+    await tasks.send_notifications()
+
+    await notification.refresh_from_db()
+    assert notification.sent_at is not None

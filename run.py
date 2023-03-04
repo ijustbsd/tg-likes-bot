@@ -1,7 +1,7 @@
 from aiogram import Dispatcher, executor
 
-from app.bot import dp
 from app.db import close, init
+from app.dispatcher import dp
 
 
 async def on_startup(_: Dispatcher):

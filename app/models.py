@@ -1,9 +1,13 @@
 import datetime as dt
 import typing as t
+from enum import StrEnum, auto
 
 from aiogram import types
 from tortoise import fields
 from tortoise.models import Model
+
+from app.config.bot import bot
+from app.config.settings import settings
 
 
 class TelegramUser(Model):
@@ -85,10 +89,20 @@ class Vote(Model):
         return True, vote
 
 
-class MonthlyRatingMessage(Model):
-    year = fields.IntField()
-    month = fields.IntField()
-    message = fields.TextField()
+class NotificationType(StrEnum):
+    INFO = auto()
+    MONTHLY_RATING = auto()
 
-    class Meta:
-        unique_together = (("year", "month"),)
+
+class Notification(Model):
+    id = fields.IntField(pk=True)
+    type = fields.CharEnumField(NotificationType, max_length=32)
+    text = fields.TextField()
+    parameters = fields.JSONField(default={})
+    sent_at = fields.DatetimeField(null=True)
+    created_at = fields.DatetimeField(auto_now=True)
+
+    async def send(self):
+        await bot.send_message(settings.TG_CHAT_ID, self.text, parse_mode="Markdown")
+        self.sent_at = dt.datetime.utcnow()
+        await self.save()
