@@ -17,6 +17,7 @@ task_logger = get_task_logger(__name__)
 
 def setup_periodic_tasks(sender: Celery, **_):
     sender.add_periodic_task(3600, send_monthly_rating_task.s())
+    sender.add_periodic_task(300, send_daily_reminder_task.s())
     sender.add_periodic_task(300, send_notifications_task.s())
 
 
@@ -62,6 +63,28 @@ async def send_monthly_rating() -> None:
     )
 
 
+async def send_daily_reminder() -> None:
+    now = dt.datetime.utcnow()
+    last_photo = await Photo.filter().order_by("-created_at").first()
+    if last_photo is None:
+        return
+
+    if last_photo.created_at > now - dt.timedelta(days=1):
+        return
+
+    if await Notification.filter(
+        type=NotificationType.DAILY_REMINDER,
+        parameters__contains={"last_photo_id": last_photo.id},
+    ).exists():
+        return
+
+    await Notification.create(
+        type=NotificationType.DAILY_REMINDER,
+        text="Эх... Давно картиночек не было 🥲",
+        parameters={"last_photo_id": last_photo.id},
+    )
+
+
 async def send_notifications() -> None:
     not_sent_notifications = await Notification.filter(sent_at__isnull=True)
     for n in not_sent_notifications:
@@ -79,6 +102,11 @@ async def send_notifications() -> None:
 @shared_task
 def send_monthly_rating_task() -> None:
     async_to_sync(send_monthly_rating)
+
+
+@shared_task
+def send_daily_reminder_task() -> None:
+    async_to_sync(send_daily_reminder)
 
 
 @shared_task

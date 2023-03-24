@@ -92,6 +92,7 @@ class Vote(Model):
 class NotificationType(StrEnum):
     INFO = auto()
     MONTHLY_RATING = auto()
+    DAILY_REMINDER = auto()
 
 
 class Notification(Model):

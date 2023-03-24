@@ -47,6 +47,11 @@ async def test_send_monthly_rating_task():
     assert await models.Notification.all().count() == 1
 
 
+async def test_send_daily_reminder_task():
+    # TODO:
+    assert True
+
+
 async def test_send_notifications(mocker):
     settings.TG_CHAT_ID = -1234
     send_message_mock = mocker.patch("app.config.bot.bot.send_message")
