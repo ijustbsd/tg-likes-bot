@@ -64,7 +64,7 @@ async def send_monthly_rating() -> None:
 
 
 async def send_daily_reminder() -> None:
-    now = dt.datetime.utcnow()
+    now = dt.datetime.utcnow().astimezone(tz=dt.UTC)
     last_photo = await Photo.filter().order_by("-created_at").first()
     if last_photo is None:
         return
