@@ -4,12 +4,15 @@ import typing as t
 from collections import defaultdict
 
 from celery import Celery, shared_task
+from celery.utils.log import get_task_logger
 from tortoise import transactions
 
 from app.config.celery import app as celery_app
 from app.db import close, init
 from app.helpers import month_number_to_name
 from app.models import Notification, NotificationType, Photo
+
+task_logger = get_task_logger(__name__)
 
 
 def setup_periodic_tasks(sender: Celery, **_):
@@ -69,6 +72,7 @@ async def send_notifications() -> None:
             try:
                 await notification.send()
             except Exception:
+                task_logger.exception(f"Ошибка при отправке уведомления! ({notification.id=})")
                 continue
 
 
