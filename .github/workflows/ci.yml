@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
         if: github.ref == 'refs/heads/master'
@@ -95,6 +96,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Deploy bot
         run: |
           sed "s|{{ TG-LIKES-BOT-IMAGE }}|${{ needs.build.outputs.image }}|" deployment-template.yaml > deployment.yaml
