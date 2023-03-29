@@ -9,12 +9,14 @@ def create_like_keyboard_markup(
     like_count: int,
     dislike_count: int,
 ) -> types.InlineKeyboardMarkup:
-    keyboard_markup = types.InlineKeyboardMarkup(row_width=2)
+    keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
     data_like = vote_callback.new(message_id=message_id, action=VoteActionEnum.UP)
     data_dislike = vote_callback.new(message_id=message_id, action=VoteActionEnum.DOWN)
+    data_votes = vote_callback.new(message_id=message_id, action=VoteActionEnum.VOTES)
     keyboard_markup.add(
         types.InlineKeyboardButton(f"👍 {like_count}", callback_data=data_like),
         types.InlineKeyboardButton(f"👎 {dislike_count}", callback_data=data_dislike),
+        types.InlineKeyboardButton("👀", callback_data=data_votes),
     )
     return keyboard_markup
 

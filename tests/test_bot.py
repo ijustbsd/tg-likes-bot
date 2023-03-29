@@ -230,6 +230,66 @@ async def test_vote_callback_handler__photo_not_exist(
     answer_callback_query_mock.assert_called_with(callback_query.id, "Что-то пошло не так 💩")
 
 
+async def test_vote_callback_votes_handler(
+    mocker,
+    callback_query,
+):
+    send_message_mock = mocker.patch("app.config.bot.bot.send_message")
+    await callback_query.from_user.save()
+    author = factories.TelegramUserFactory()
+    await author.save()
+    p1 = factories.TelegramUserFactory(first_name="Ваня", last_name="Иванов")
+    await p1.save()
+    p2 = factories.TelegramUserFactory(first_name="Коля", last_name="Николаев")
+    await p2.save()
+    p3 = factories.TelegramUserFactory(first_name="Петя", last_name="Петров")
+    await p3.save()
+    photo = factories.PhotoFactory(author=author)
+    await photo.save()
+    await factories.VoteFactory(user=p1, photo=photo, value=1).save()
+    await factories.VoteFactory(user=p2, photo=photo, value=-1).save()
+    await factories.VoteFactory(user=p3, photo=photo, value=1).save()
+    callback_data = {
+        "message_id": photo.id,
+        "action": schemas.VoteActionEnum.VOTES,
+    }
+
+    await dispatcher.vote_callback_votes_handler(callback_query, callback_data)
+
+    text = "*Рейтинг картинки:*\n" "Ваня Иванов: 👍\n" "Коля Николаев: 👎\n" "Петя Петров: 👍"
+    send_message_mock.assert_called_with(
+        chat_id=42,
+        text=text,
+        reply_to_message_id=photo.id,
+        parse_mode="Markdown",
+    )
+
+
+async def test_vote_callback_votes_handler__empty_votes(
+    mocker,
+    callback_query,
+):
+    send_message_mock = mocker.patch("app.config.bot.bot.send_message")
+    await callback_query.from_user.save()
+    author = factories.TelegramUserFactory()
+    await author.save()
+    photo = factories.PhotoFactory(author=author)
+    await photo.save()
+    callback_data = {
+        "message_id": photo.id,
+        "action": schemas.VoteActionEnum.VOTES,
+    }
+
+    await dispatcher.vote_callback_votes_handler(callback_query, callback_data)
+
+    send_message_mock.assert_called_with(
+        chat_id=42,
+        text="Картинку пока никто не оценил 🙈",
+        reply_to_message_id=photo.id,
+        parse_mode="Markdown",
+    )
+
+
 async def test_rating_handler(mocker, message):
     send_message_mock = mocker.patch("app.config.bot.bot.send_message")
     await factories.TelegramUserFactory(

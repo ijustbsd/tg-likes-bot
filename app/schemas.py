@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class VoteActionEnum(StrEnum):
     UP = "up"
     DOWN = "down"
+    VOTES = "votes"
 
 
 class VoteCallbackData(BaseModel):

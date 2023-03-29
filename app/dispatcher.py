@@ -48,6 +48,34 @@ async def vote_callback_handler(
         await bot.answer_callback_query(callback_query.id, "Твой голос учтён!")
 
 
+@dp.callback_query_handler(vote_callback.filter(action=[VoteActionEnum.VOTES]))
+async def vote_callback_votes_handler(
+    callback_query: types.CallbackQuery,
+    callback_data: dict[str, str],
+):
+    vote_callback_data = VoteCallbackData(**callback_data)
+
+    votes = await Vote.filter(photo=vote_callback_data.message_id).prefetch_related("user")
+    if not votes:
+        await bot.send_message(
+            chat_id=callback_query.message.chat.id,
+            text="Картинку пока никто не оценил 🙈",
+            reply_to_message_id=vote_callback_data.message_id,
+            parse_mode="Markdown",
+        )
+        return
+
+    text = "*Рейтинг картинки:*\n"
+    text += "\n".join([f"{v.user.name}: {'👍' if v.value == 1 else '👎'}" for v in votes])
+
+    await bot.send_message(
+        chat_id=callback_query.message.chat.id,
+        text=text,
+        reply_to_message_id=vote_callback_data.message_id,
+        parse_mode="Markdown",
+    )
+
+
 @dp.message_handler(content_types=types.ContentTypes.PHOTO)
 async def photo_handler(message: types.Message):
     author, _ = await TelegramUser.get_or_create_from_tg_user(message.from_user)
