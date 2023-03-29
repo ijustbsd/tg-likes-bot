@@ -9,3 +9,4 @@ pg-data
 celerybeat-schedule.db
 
 .vscode
+config.yaml

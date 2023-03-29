@@ -84,3 +84,19 @@ jobs:
           cd /app
           scripts/lint.sh
           scripts/test.sh
+
+  deploy:
+    needs:
+      - quality
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy bot
+        run: |
+          sed "s|{{ TG-LIKES-BOT-IMAGE }}|${{ needs.build.outputs.image }}|" deployment-template.yaml > deployment.yaml
+          kubectl config set-cluster dev --server="$K8S_SERVER"
+          kubectl config set-credentials "$K8S_USER" --token="$K8S_TOKEN"
+          kubectl config set-context deploy --cluster=dev --namespace="$K8S_NS" --user="$K8S_USER"
+          kubectl config use-context deploy
+          kubectl apply -f deployment.yaml

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tg-likes-bot
+  namespace: tg-likes-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tg-likes-bot
+  template:
+    metadata:
+      labels:
+        app: tg-likes-bot
+    spec:
+      containers:
+      - name: tg-likes-bot
+        image: "{{ TG-LIKES-BOT-IMAGE }}"
+        envFrom:
+        - secretRef:
+            name: tg-likes-bot-secret
+        command: ["python", "run.py"]
