@@ -91,6 +91,7 @@ jobs:
 
   deploy:
     needs:
+      - build
       - quality
 
     runs-on: ubuntu-latest
