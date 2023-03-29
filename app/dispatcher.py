@@ -64,7 +64,7 @@ async def vote_callback_votes_handler(
             disable_notification=True,
             parse_mode="Markdown",
         )
-        await callback_query.answer()
+        await callback_query.answer(cache_time=60)
         return
 
     text = "*Рейтинг картинки:*\n"
@@ -77,7 +77,7 @@ async def vote_callback_votes_handler(
         disable_notification=True,
         parse_mode="Markdown",
     )
-    await callback_query.answer()
+    await callback_query.answer(cache_time=60)
 
 
 @dp.message_handler(content_types=types.ContentTypes.PHOTO)
