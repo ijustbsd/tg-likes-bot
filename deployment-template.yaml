@@ -20,3 +20,53 @@ spec:
         - secretRef:
             name: tg-likes-bot-secret
         command: ["python", "run.py"]
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tg-likes-bot-celery
+  namespace: tg-likes-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tg-likes-bot-celery
+  template:
+    metadata:
+      labels:
+        app: tg-likes-bot-celery
+    spec:
+      containers:
+      - name: tg-likes-bot-celery
+        image: "{{ TG-LIKES-BOT-IMAGE }}"
+        envFrom:
+        - secretRef:
+            name: tg-likes-bot-secret
+        command: ["celery", "-A", "app.tasks", "worker", "-l", "info"]
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tg-likes-bot-celery-beat
+  namespace: tg-likes-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tg-likes-bot-celery-beat
+  template:
+    metadata:
+      labels:
+        app: tg-likes-bot-celery-beat
+    spec:
+      containers:
+      - name: tg-likes-bot-celery-beat
+        image: "{{ TG-LIKES-BOT-IMAGE }}"
+        envFrom:
+        - secretRef:
+            name: tg-likes-bot-secret
+        command: ["celery", "-A", "app.tasks", "beat", "-l", "info"]
