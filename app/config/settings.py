@@ -14,14 +14,14 @@ class Settings(BaseSettings):
 
     TORTOISE_ORM: dict[str, t.Any] = {}
 
-    REDIS_PROTOCOL: str = "redis"
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_USER: str = "bot"
-    REDIS_PASSWORD: str = "bot"
-    REDIS_VHOST: str = ""
+    RABBITMQ_PROTOCOL: str = "amqp"
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str = "bot"
+    RABBITMQ_PASSWORD: str = "bot"
+    RABBITMQ_VHOST: str = ""
 
-    REDIS: dict[str, t.Any] = {}
+    RABBITMQ: dict[str, t.Any] = {}
 
     TG_CHAT_ID: int = 0
 
@@ -53,14 +53,14 @@ class Settings(BaseSettings):
                 },
             }
         )
-        values["REDIS"].update(
+        values["RABBITMQ"].update(
             {
-                "protocol": values["REDIS_PROTOCOL"],
-                "host": values["REDIS_HOST"],
-                "port": values["REDIS_PORT"],
-                "user": values["REDIS_USER"],
-                "password": values["REDIS_PASSWORD"],
-                "db_number": values["REDIS_VHOST"],
+                "protocol": values["RABBITMQ_PROTOCOL"],
+                "host": values["RABBITMQ_HOST"],
+                "port": values["RABBITMQ_PORT"],
+                "user": values["RABBITMQ_USER"],
+                "password": values["RABBITMQ_PASSWORD"],
+                "vhost": values["RABBITMQ_VHOST"],
             }
         )
         return values
@@ -71,4 +71,4 @@ settings = Settings()
 # для aerich
 TORTOISE_ORM = settings.TORTOISE_ORM
 
-CELERY_BROKER_URL = "{protocol}://{user}:{password}@{host}:{port}/{db_number}".format_map(settings.REDIS)
+CELERY_BROKER_URL = "{protocol}://{user}:{password}@{host}:{port}/{vhost}".format_map(settings.RABBITMQ)
