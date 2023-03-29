@@ -261,6 +261,7 @@ async def test_vote_callback_votes_handler(
         chat_id=42,
         text=text,
         reply_to_message_id=photo.id,
+        disable_notification=True,
         parse_mode="Markdown",
     )
 
@@ -286,6 +287,7 @@ async def test_vote_callback_votes_handler__empty_votes(
         chat_id=42,
         text="Картинку пока никто не оценил 🙈",
         reply_to_message_id=photo.id,
+        disable_notification=True,
         parse_mode="Markdown",
     )
 

@@ -61,8 +61,10 @@ async def vote_callback_votes_handler(
             chat_id=callback_query.message.chat.id,
             text="Картинку пока никто не оценил 🙈",
             reply_to_message_id=vote_callback_data.message_id,
+            disable_notification=True,
             parse_mode="Markdown",
         )
+        await callback_query.answer()
         return
 
     text = "*Рейтинг картинки:*\n"
@@ -72,8 +74,10 @@ async def vote_callback_votes_handler(
         chat_id=callback_query.message.chat.id,
         text=text,
         reply_to_message_id=vote_callback_data.message_id,
+        disable_notification=True,
         parse_mode="Markdown",
     )
+    await callback_query.answer()
 
 
 @dp.message_handler(content_types=types.ContentTypes.PHOTO)
