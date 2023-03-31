@@ -30,7 +30,7 @@ async def test_send_monthly_rating_task():
 
     text = "\n".join(
         [
-            "Февраль подходит к концу. Текущий рейтинг участников:",
+            "Февраль подходит к концу. Рейтинг за февраль:",
             "Петр Петров: 42",
             "Иван Иванов: 6",
         ]
@@ -40,6 +40,11 @@ async def test_send_monthly_rating_task():
     assert notification.text == text
     assert notification.parameters == {"year": 2023, "month": 2}
     assert notification.sent_at is None
+
+    with freeze_time("2023-02-28 13:17:19"):
+        await tasks.send_monthly_rating()
+
+    assert await models.Notification.all().count() == 1
 
     with freeze_time("2023-03-01 12:34:56"):
         await tasks.send_monthly_rating()

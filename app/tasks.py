@@ -40,11 +40,11 @@ async def send_monthly_rating() -> None:
         return
     if await Notification.filter(
         type=NotificationType.MONTHLY_RATING,
-        parameters__contains=[{"year": today.year}, {"month": today.month}],
+        parameters__contains={"year": today.year, "month": today.month},
     ).exists():
         return
-    month_name = month_number_to_name(today.month).capitalize()
-    text = f"{month_name} подходит к концу. Текущий рейтинг участников:\n"
+    month_name = month_number_to_name(today.month)
+    text = f"{month_name.capitalize()} подходит к концу. Рейтинг за {month_name}:\n"
     photos = await Photo.filter(
         created_at__gte=today.replace(day=1),
         created_at__lte=today,
