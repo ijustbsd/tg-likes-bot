@@ -34,7 +34,7 @@ def action_to_vote_value(action: VoteActionEnum) -> int:
 
 async def get_global_rating() -> dict[str, int]:
     rating = {}
-    users = await TelegramUser.all().order_by("-rating")
+    users = await TelegramUser.filter(rating__not=0).order_by("-rating")
     for user in users:
         rating[user.name] = user.rating
     return rating
