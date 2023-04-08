@@ -1,7 +1,11 @@
+from collections import defaultdict
+
 from aiogram import types
 
+from .models import Photo
 from .models import TelegramUser
-from .schemas import VoteActionEnum, vote_callback
+from .schemas import VoteActionEnum
+from .schemas import vote_callback
 
 
 def create_like_keyboard_markup(
@@ -28,12 +32,20 @@ def action_to_vote_value(action: VoteActionEnum) -> int:
     }[action]
 
 
-async def get_rating() -> dict[str, int]:
+async def get_global_rating() -> dict[str, int]:
     rating = {}
     users = await TelegramUser.all().order_by("-rating")
     for user in users:
         rating[user.name] = user.rating
     return rating
+
+
+async def get_monthly_rating(month: int) -> dict[str, int]:
+    photos: list[Photo] = await Photo.filter(created_at__month=month).prefetch_related("author")
+    rating: defaultdict[str, int] = defaultdict(int)
+    for photo in photos:
+        rating[photo.author.name] += photo.likes - photo.dislikes
+    return dict(sorted(rating.items(), key=lambda x: x[1], reverse=True))
 
 
 def month_number_to_name(month: int) -> str:

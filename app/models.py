@@ -1,6 +1,7 @@
 import datetime as dt
 import typing as t
-from enum import StrEnum, auto
+from enum import StrEnum
+from enum import auto
 
 from aiogram import types
 from tortoise import fields

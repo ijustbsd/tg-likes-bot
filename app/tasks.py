@@ -3,14 +3,18 @@ import datetime as dt
 import typing as t
 from collections import defaultdict
 
-from celery import Celery, shared_task
+from celery import Celery
+from celery import shared_task
 from celery.utils.log import get_task_logger
 from tortoise import transactions
 
 from app.config.celery import app as celery_app
-from app.db import close, init
+from app.db import close
+from app.db import init
 from app.helpers import month_number_to_name
-from app.models import Notification, NotificationType, Photo
+from app.models import Notification
+from app.models import NotificationType
+from app.models import Photo
 
 task_logger = get_task_logger(__name__)
 

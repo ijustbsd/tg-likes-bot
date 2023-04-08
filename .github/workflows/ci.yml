@@ -102,7 +102,7 @@ jobs:
 
       - name: Deploy bot
         run: |
-          sed "s|{{ TG-LIKES-BOT-IMAGE }}|${{ needs.build.outputs.image }}|" deployment-template.yaml > deployment.yaml
+          sed "s|{{ TG-LIKES-BOT-IMAGE }}|${{ needs.build.outputs.image }}|" k8s/deployment-template.yaml > deployment.yaml
           kubectl config set-cluster dev --server="${{ secrets.K8S_SERVER }}"
           kubectl config set-credentials "${{ secrets.K8S_USER }}" --token="${{ secrets.K8S_TOKEN }}"
           kubectl config set-context deploy --cluster=dev --namespace="${{ secrets.K8S_NS }}" --user="${{ secrets.K8S_USER }}"

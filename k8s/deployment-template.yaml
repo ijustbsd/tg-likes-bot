@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: tg-likes-bot
-        image: "{{ TG-LIKES-BOT-IMAGE }}"
+        image: ghcr.io/ijustbsd/tg-likes-bot:1.0.21
         envFrom:
         - secretRef:
             name: tg-likes-bot-secret
@@ -40,7 +40,7 @@ spec:
     spec:
       containers:
       - name: tg-likes-bot-celery
-        image: "{{ TG-LIKES-BOT-IMAGE }}"
+        image: ghcr.io/ijustbsd/tg-likes-bot:1.0.21
         envFrom:
         - secretRef:
             name: tg-likes-bot-secret
@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
       - name: tg-likes-bot-celery-beat
-        image: "{{ TG-LIKES-BOT-IMAGE }}"
+        image: ghcr.io/ijustbsd/tg-likes-bot:1.0.21
         envFrom:
         - secretRef:
             name: tg-likes-bot-secret

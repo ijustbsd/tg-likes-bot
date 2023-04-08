@@ -1,10 +1,14 @@
 # import datetime as dt
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY
+from unittest.mock import AsyncMock
 
 import pytest
 from freezegun import freeze_time
 
-from app import dispatcher, factories, models, schemas
+from app import dispatcher
+from app import factories
+from app import models
+from app import schemas
 
 
 @pytest.fixture()
@@ -292,7 +296,7 @@ async def test_vote_callback_votes_handler__empty_votes(
     )
 
 
-async def test_rating_handler(mocker, message):
+async def test_global_rating_handler(mocker, message):
     send_message_mock = mocker.patch("app.config.bot.bot.send_message")
     await factories.TelegramUserFactory(
         first_name="Сергей",
@@ -306,13 +310,46 @@ async def test_rating_handler(mocker, message):
     ).save()
     assert await models.TelegramUser.all().count() == 2
 
-    await dispatcher.rating_handler(message)
+    await dispatcher.global_rating_handler(message)
 
-    text = "*Рейтинг участников:*\nСергей Бабошин: 17\nЕкатерина Тарасова: 14"
+    text = "*Глобальный рейтинг:*\nСергей Бабошин: 17\nЕкатерина Тарасова: 14"
     send_message_mock.assert_called_with(42, text, parse_mode="Markdown")
 
 
-async def test_rating_handler__empty_users(message):
+async def test_global_rating_handler__empty_users(message):
     assert await models.TelegramUser.all().count() == 0
-    await dispatcher.rating_handler(message)
+    await dispatcher.global_rating_handler(message)
+    message.reply.assert_called_with("Не найдено ни одного участника!")
+
+
+async def test_monthly_rating_handler(mocker, message):
+    send_message_mock = mocker.patch("app.config.bot.bot.send_message")
+    u1 = await factories.TelegramUserFactory(
+        first_name="Сергей",
+        last_name="Бабошин",
+    )
+    await u1.save()
+    u2 = await factories.TelegramUserFactory(
+        first_name="Екатерина",
+        last_name="Тарасова",
+    )
+    await u2.save()
+    p1 = factories.PhotoFactory(author=u1, likes=5, dislikes=2, created_at="2023-03-14")
+    await p1.save()
+    p2 = factories.PhotoFactory(author=u2, likes=7, dislikes=5, created_at="2023-03-27")
+    await p2.save()
+    p3 = factories.PhotoFactory(author=u1, likes=10, dislikes=3, created_at="2023-04-01")
+    await p3.save()
+    assert await models.TelegramUser.all().count() == 2
+
+    with freeze_time("2022-03-17 12:34:56"):
+        await dispatcher.monthly_rating_handler(message)
+
+    text = "*Рейтинг за март:*\nСергей Бабошин: 3\nЕкатерина Тарасова: 2"
+    send_message_mock.assert_called_with(42, text, parse_mode="Markdown")
+
+
+async def test_monthly_rating_handler__empty_users(message):
+    assert await models.TelegramUser.all().count() == 0
+    await dispatcher.monthly_rating_handler(message)
     message.reply.assert_called_with("Не найдено ни одного участника!")

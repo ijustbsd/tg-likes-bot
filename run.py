@@ -1,6 +1,8 @@
-from aiogram import Dispatcher, executor
+from aiogram import Dispatcher
+from aiogram import executor
 
-from app.db import close, init
+from app.db import close
+from app.db import init
 from app.dispatcher import dp
 
 

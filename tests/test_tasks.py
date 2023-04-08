@@ -1,6 +1,8 @@
 from freezegun import freeze_time
 
-from app import factories, models, tasks
+from app import factories
+from app import models
+from app import tasks
 from app.config.settings import settings
 
 

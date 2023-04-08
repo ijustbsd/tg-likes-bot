@@ -1,6 +1,7 @@
 import typing as t
 
-from pydantic import BaseSettings, root_validator
+from pydantic import BaseSettings
+from pydantic import root_validator
 
 
 class Settings(BaseSettings):

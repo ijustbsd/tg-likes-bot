@@ -1,12 +1,23 @@
+import datetime as dt
 import logging
 
-from aiogram import Dispatcher, types
-from tortoise import exceptions, transactions
+from aiogram import Dispatcher
+from aiogram import types
+from tortoise import exceptions
+from tortoise import transactions
 
 from app.config.bot import bot
-from app.helpers import action_to_vote_value, create_like_keyboard_markup, get_rating
-from app.models import Photo, TelegramUser, Vote
-from app.schemas import VoteActionEnum, VoteCallbackData, vote_callback
+from app.helpers import action_to_vote_value
+from app.helpers import create_like_keyboard_markup
+from app.helpers import get_global_rating
+from app.helpers import get_monthly_rating
+from app.helpers import month_number_to_name
+from app.models import Photo
+from app.models import TelegramUser
+from app.models import Vote
+from app.schemas import VoteActionEnum
+from app.schemas import VoteCallbackData
+from app.schemas import vote_callback
 
 logging.basicConfig(level=logging.INFO)
 
@@ -89,10 +100,23 @@ async def photo_handler(message: types.Message):
         await message.reply("Тебе понравилась эта картинка?", reply_markup=reply_markup)
 
 
+@dp.message_handler(commands=["global_rating"])
+async def global_rating_handler(message: types.Message):
+    text = "*Глобальный рейтинг:*\n"
+    rating = await get_global_rating()
+    if not rating:
+        await message.reply("Не найдено ни одного участника!")
+        return
+    text += "\n".join([f"{name}: {votes}" for name, votes in rating.items()])
+    await bot.send_message(message.chat.id, text, parse_mode="Markdown")
+
+
 @dp.message_handler(commands=["rating"])
-async def rating_handler(message: types.Message):
-    text = "*Рейтинг участников:*\n"
-    rating = await get_rating()
+async def monthly_rating_handler(message: types.Message):
+    today: dt.date = dt.datetime.utcnow().date()
+    month_name = month_number_to_name(today.month)
+    text = f"*Рейтинг за {month_name}:*\n"
+    rating = await get_monthly_rating(today.month)
     if not rating:
         await message.reply("Не найдено ни одного участника!")
         return
