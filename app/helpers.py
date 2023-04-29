@@ -44,7 +44,7 @@ async def get_monthly_rating(month: int) -> dict[str, int]:
     photos: list[Photo] = await Photo.filter(created_at__month=month).prefetch_related("author")
     rating: defaultdict[str, int] = defaultdict(int)
     for photo in photos:
-        rating[photo.author.name] += photo.likes - photo.dislikes
+        rating[photo.author.name] += photo.likes + photo.dislikes
     return dict(sorted(rating.items(), key=lambda x: x[1], reverse=True))
 
 

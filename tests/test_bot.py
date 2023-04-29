@@ -334,11 +334,11 @@ async def test_monthly_rating_handler(mocker, message):
         last_name="Тарасова",
     )
     await u2.save()
-    p1 = factories.PhotoFactory(author=u1, likes=5, dislikes=2, created_at="2023-03-14")
+    p1 = factories.PhotoFactory(author=u1, likes=5, dislikes=-2, created_at="2023-03-14")
     await p1.save()
-    p2 = factories.PhotoFactory(author=u2, likes=7, dislikes=5, created_at="2023-03-27")
+    p2 = factories.PhotoFactory(author=u2, likes=7, dislikes=-5, created_at="2023-03-27")
     await p2.save()
-    p3 = factories.PhotoFactory(author=u1, likes=10, dislikes=3, created_at="2023-04-01")
+    p3 = factories.PhotoFactory(author=u1, likes=10, dislikes=-3, created_at="2023-04-01")
     await p3.save()
     assert await models.TelegramUser.all().count() == 2
 
