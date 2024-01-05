@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY poetry.lock poetry.lock
+COPY pyproject.toml poetry.lock ./
 
 RUN \
     pip install --no-cache-dir --upgrade pip && \
