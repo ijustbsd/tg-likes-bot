@@ -1,7 +1,10 @@
+import logging
 import typing as t
 
 from pydantic import BaseSettings
 from pydantic import root_validator
+
+logging.root.setLevel(logging.INFO)
 
 
 class Settings(BaseSettings):

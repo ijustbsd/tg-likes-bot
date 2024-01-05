@@ -1,40 +1,13 @@
-import asyncio
 import datetime as dt
-import typing as t
+import logging
 from collections import defaultdict
 
-from celery import Celery
-from celery import shared_task
-from celery.utils.log import get_task_logger
 from tortoise import transactions
 
-from app.config.celery import app as celery_app
-from app.db import close
-from app.db import init
 from app.helpers import month_number_to_name
 from app.models import Notification
 from app.models import NotificationType
 from app.models import Photo
-
-task_logger = get_task_logger(__name__)
-
-
-def setup_periodic_tasks(sender: Celery, **_):
-    sender.add_periodic_task(3600, send_monthly_rating_task.s())
-    sender.add_periodic_task(300, send_daily_reminder_task.s())
-    sender.add_periodic_task(300, send_notifications_task.s())
-
-
-async def _db_context(func: t.Callable, *args, **kwargs) -> None:
-    try:
-        await init()
-        await func(*args, **kwargs)
-    finally:
-        await close()
-
-
-def async_to_sync(func: t.Callable, *args, **kwargs) -> None:
-    asyncio.run(_db_context(func, *args, **kwargs))
 
 
 async def send_monthly_rating() -> None:
@@ -99,23 +72,5 @@ async def send_notifications() -> None:
             try:
                 await notification.send()
             except Exception:
-                task_logger.exception(f"Ошибка при отправке уведомления! ({notification.id=})")
+                logging.exception(f"Ошибка при отправке уведомления! ({notification.id=})")
                 continue
-
-
-@shared_task
-def send_monthly_rating_task() -> None:
-    async_to_sync(send_monthly_rating)
-
-
-@shared_task
-def send_daily_reminder_task() -> None:
-    async_to_sync(send_daily_reminder)
-
-
-@shared_task
-def send_notifications_task() -> None:
-    async_to_sync(send_notifications)
-
-
-setup_periodic_tasks(celery_app)

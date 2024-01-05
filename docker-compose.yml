@@ -1,7 +1,31 @@
 version: "3.9"
 services:
 
-  db:
+  app:
+    image: ghcr.io/ijustbsd/tg-likes-bot
+    restart: always
+    environment:
+      APP_BOT_TOKEN: "1337:BOT_TOKEN"
+      APP_DB_HOST: "postgres"
+      APP_DB_USER: "bot"
+      APP_DB_PASSWORD: "bot"
+      APP_DB_NAME: "bot"
+      APP_TG_CHAT_ID: "-0"
+    command: ["python", "run.py"]
+
+  tasks:
+    image: ghcr.io/ijustbsd/tg-likes-bot
+    restart: always
+    environment:
+      APP_BOT_TOKEN: "1337:BOT_TOKEN"
+      APP_DB_HOST: "postgres"
+      APP_DB_USER: "bot"
+      APP_DB_PASSWORD: "bot"
+      APP_DB_NAME: "bot"
+      APP_TG_CHAT_ID: "-0"
+    command: ["python", "periodic_tasks.py"]
+
+  postgres:
     image: postgres:14
     ports:
       - "5432:5432"
