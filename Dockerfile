@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ENV PYTHONPATH=/app
+
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
