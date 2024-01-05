@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-ENV PYTHONPATH=/app
+ENV POETRY_VIRTUALENVS_IN_PROJECT=false
 
 WORKDIR /app
 
