@@ -47,32 +47,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build Docker image
+      - name: Build and push Docker image
         id: build
         run: |
           VERSION=$(git describe --tags --always | cut -c 2-)
           docker build . --file Dockerfile --tag $GH_IMAGE_ID:$VERSION --tag $GH_IMAGE_ID:latest
-
-      - name: Push to Github registry
-        id: push-gh-cr
-        run: |
-          VERSION=$(git describe --tags --always | cut -c 2-)
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker push $GH_IMAGE_ID:$VERSION
-          echo "image=$GH_IMAGE_ID:$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Login to Yandex Cloud Container Registry
-        id: login-ya-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-
-      - name: Push to Yandex registry
-        id: push-ya-cr
-        run: |
-          VERSION=$(git describe --tags --always | cut -c 2-)
+          echo "${{ secrets.YA_OAUTH }}" | docker login cr.yandex -u oauth --password-stdin
           docker tag $GH_IMAGE_ID:$VERSION $YA_IMAGE_ID:$VERSION
           docker push $YA_IMAGE_ID:$VERSION
+          echo "image=$GH_IMAGE_ID:$VERSION" >> $GITHUB_OUTPUT
 
     outputs:
       image: ${{ steps.build.outputs.image }}
