@@ -113,7 +113,7 @@ jobs:
             --core-fraction 20 \
             --execution-timeout 5s \
             --concurrency 10 \
-            --service-account-id ${{ YA_SERVICE_ACCOUNT_ID }} \
+            --service-account-id ${{ secrets.YA_SERVICE_ACCOUNT_ID }} \
             --image ${{ needs.build.outputs.ya_image }} \
             --command python \
             --args run.py \
