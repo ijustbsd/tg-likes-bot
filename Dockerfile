@@ -4,6 +4,11 @@ ENV POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
 
+RUN \
+    apt update && \
+    apt install -y gcc && \
+    apt clean
+
 COPY pyproject.toml poetry.lock ./
 
 RUN \
