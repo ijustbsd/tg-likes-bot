@@ -114,7 +114,7 @@ jobs:
             --execution-timeout 5s \
             --concurrency 10 \
             --service-account-id ${{ secrets.YA_SERVICE_ACCOUNT_ID }} \
-            --image ${{ needs.build.outputs.ya_image }} \
+            --image "${{ needs.build.outputs.ya_image }}" \
             --command python \
             --args run.py \
             --zone-instances-limit 1 \
