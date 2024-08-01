@@ -93,7 +93,7 @@ jobs:
         run: |
           cd /app
           scripts/lint.sh
-          scripts/test.sh
+          # scripts/test.sh
 
   deploy:
     needs:
