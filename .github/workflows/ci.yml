@@ -57,10 +57,12 @@ jobs:
           echo "${{ secrets.YA_OAUTH }}" | docker login cr.yandex -u oauth --password-stdin
           docker tag $GH_IMAGE_ID:$VERSION $YA_IMAGE_ID:$VERSION
           docker push $YA_IMAGE_ID:$VERSION
-          echo "image=$GH_IMAGE_ID:$VERSION" >> $GITHUB_OUTPUT
+          echo "gh_image=$GH_IMAGE_ID:$VERSION" >> $GITHUB_OUTPUT
+          echo "ya_image=$YA_IMAGE_ID:$VERSION" >> $GITHUB_OUTPUT
 
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      gh_image: ${{ steps.build.outputs.gh_image }}
+      ya_image: ${{ steps.build.outputs.ya_image }}
 
   quality:
     needs:
@@ -82,7 +84,7 @@ jobs:
           --health-retries 5
 
     container:
-      image: ${{ needs.build.outputs.image }}
+      image: ${{ needs.build.outputs.gh_image }}
       env:
         APP_DB_HOST: postgres
 
@@ -92,3 +94,28 @@ jobs:
           cd /app
           scripts/lint.sh
           scripts/test.sh
+
+  deploy:
+    needs:
+      - build
+      - quality
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Yandex SLS Containers
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          yc --token ${{ secrets.YA_OAUTH }} --folder-id ${{ secrets.YA_FOLDER_ID }} serverless container revisions deploy \
+            --container-name tg-likes-bot \
+            --memory 1GB \
+            --cores 1 \
+            --core-fraction 20 \
+            --execution-timeout 5s \
+            --concurrency 10 \
+            --service-account-id ${{ YA_SERVICE_ACCOUNT_ID }} \
+            --image ${{ needs.build.outputs.ya_image }} \
+            --command python \
+            --args run.py \
+            --zone-instances-limit 1 \
+            --log-group-name tg-likes-bot
