@@ -324,7 +324,7 @@ async def test_monthly_rating_handler(mocker, message):
     await p3.save()
     assert await models.TelegramUser.all().count() == 2
 
-    with freeze_time("2022-03-17 12:34:56"):
+    with freeze_time("2023-03-17 12:34:56"):
         await dispatcher.monthly_rating_handler(message)
 
     text = "*Рейтинг за март:*\nСергей Бабошин: 3\nЕкатерина Тарасова: 2"

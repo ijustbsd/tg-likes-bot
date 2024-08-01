@@ -129,7 +129,7 @@ async def monthly_rating_handler(message: types.Message):
     today: dt.date = dt.datetime.utcnow().date()
     month_name = month_number_to_name(today.month)
     text = f"*Рейтинг за {month_name}:*\n"
-    rating = await get_monthly_rating(today.month)
+    rating = await get_monthly_rating(today.month, today.year)
     if not rating:
         await message.reply("Не найдено ни одного участника!")
         return

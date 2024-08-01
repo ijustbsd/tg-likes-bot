@@ -42,8 +42,8 @@ async def get_global_rating() -> dict[str, int]:
     return rating
 
 
-async def get_monthly_rating(month: int) -> dict[str, int]:
-    photos: list[Photo] = await Photo.filter(created_at__month=month).prefetch_related("author")
+async def get_monthly_rating(month: int, year: int) -> dict[str, int]:
+    photos: list[Photo] = await Photo.filter(created_at__month=month, created_at__year=year).prefetch_related("author")
     rating: defaultdict[str, int] = defaultdict(int)
     for photo in photos:
         rating[photo.author.name] += photo.likes + photo.dislikes

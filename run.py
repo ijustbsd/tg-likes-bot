@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Bot
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiogram.webhook.aiohttp_server import setup_application
