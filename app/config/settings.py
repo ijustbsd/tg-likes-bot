@@ -1,8 +1,8 @@
 import logging
 import typing as t
 
-from pydantic import BaseSettings
-from pydantic import root_validator
+from pydantic import model_validator
+from pydantic_settings import BaseSettings
 
 logging.root.setLevel(logging.INFO)
 
@@ -33,41 +33,40 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_prefix = "APP_"
 
-    @root_validator
-    @classmethod
-    def post_init(cls, values: dict[str, t.Any]) -> dict[str, t.Any]:
-        values["TORTOISE_ORM"].update(
-            {
-                "connections": {
-                    "default": {
-                        "engine": "tortoise.backends.asyncpg",
-                        "credentials": {
-                            "host": values["DB_HOST"],
-                            "port": values["DB_PORT"],
-                            "user": values["DB_USER"],
-                            "password": values["DB_PASSWORD"],
-                            "database": values["DB_NAME"],
-                        },
+    @model_validator(mode="after")
+    def set_tortoise_orm(self) -> t.Self:
+        self.TORTOISE_ORM = {
+            "connections": {
+                "default": {
+                    "engine": "tortoise.backends.asyncpg",
+                    "credentials": {
+                        "host": self.DB_HOST,
+                        "port": self.DB_PORT,
+                        "user": self.DB_USER,
+                        "password": self.DB_PASSWORD,
+                        "database": self.DB_NAME,
                     },
                 },
-                "apps": {
-                    "models": {
-                        "models": ["app.models", "aerich.models"],
-                    },
+            },
+            "apps": {
+                "models": {
+                    "models": ["app.models", "aerich.models"],
                 },
-            }
-        )
-        values["RABBITMQ"].update(
-            {
-                "protocol": values["RABBITMQ_PROTOCOL"],
-                "host": values["RABBITMQ_HOST"],
-                "port": values["RABBITMQ_PORT"],
-                "user": values["RABBITMQ_USER"],
-                "password": values["RABBITMQ_PASSWORD"],
-                "vhost": values["RABBITMQ_VHOST"],
-            }
-        )
-        return values
+            },
+        }
+        return self
+
+    @model_validator(mode="after")
+    def set_rabbitmq(self) -> t.Self:
+        self.RABBITMQ = {
+            "protocol": self.RABBITMQ_PROTOCOL,
+            "host": self.RABBITMQ_HOST,
+            "port": self.RABBITMQ_PORT,
+            "user": self.RABBITMQ_USER,
+            "password": self.RABBITMQ_PASSWORD,
+            "vhost": self.RABBITMQ_VHOST,
+        }
+        return self
 
 
 settings = Settings()

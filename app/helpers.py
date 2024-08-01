@@ -5,7 +5,7 @@ from aiogram import types
 from .models import Photo
 from .models import TelegramUser
 from .schemas import VoteActionEnum
-from .schemas import vote_callback
+from .schemas import VoteCallback
 
 
 def create_like_keyboard_markup(
@@ -13,16 +13,18 @@ def create_like_keyboard_markup(
     like_count: int,
     dislike_count: int,
 ) -> types.InlineKeyboardMarkup:
-    keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
-    data_like = vote_callback.new(message_id=message_id, action=VoteActionEnum.UP)
-    data_dislike = vote_callback.new(message_id=message_id, action=VoteActionEnum.DOWN)
-    data_votes = vote_callback.new(message_id=message_id, action=VoteActionEnum.VOTES)
-    keyboard_markup.add(
-        types.InlineKeyboardButton(f"👍 {like_count}", callback_data=data_like),
-        types.InlineKeyboardButton(f"👎 {dislike_count}", callback_data=data_dislike),
-        types.InlineKeyboardButton("👀", callback_data=data_votes),
+    data_like = VoteCallback(message_id=message_id, action=VoteActionEnum.UP).pack()
+    data_dislike = VoteCallback(message_id=message_id, action=VoteActionEnum.DOWN).pack()
+    data_votes = VoteCallback(message_id=message_id, action=VoteActionEnum.VOTES).pack()
+    return types.InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                types.InlineKeyboardButton(text=f"👍 {like_count}", callback_data=data_like),
+                types.InlineKeyboardButton(text=f"👎 {dislike_count}", callback_data=data_dislike),
+                types.InlineKeyboardButton(text="👀", callback_data=data_votes),
+            ]
+        ]
     )
-    return keyboard_markup
 
 
 def action_to_vote_value(action: VoteActionEnum) -> int:

@@ -1,21 +1,26 @@
-from aiogram import Dispatcher
-from aiogram import executor
+import asyncio
 
+from aiogram import Bot
+
+from app.config.bot import bot
 from app.db import close
 from app.db import init
 from app.dispatcher import dp
 
 
-async def on_startup(_: Dispatcher):
+async def on_startup(bot: Bot):
     await init()
 
 
-async def on_shutdown(_: Dispatcher):
+async def on_shutdown(bot: Bot):
     await close()
 
 
+async def main():
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
+    await dp.start_polling(bot)
+
+
 if __name__ == "__main__":
-    bot_executor = executor.Executor(dp, skip_updates=True)
-    bot_executor.on_startup(on_startup)
-    bot_executor.on_shutdown(on_shutdown)
-    bot_executor.start_polling()
+    asyncio.run(main())
