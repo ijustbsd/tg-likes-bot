@@ -21,7 +21,7 @@ async def on_shutdown(bot: Bot):
     await close()
 
 
-async def main():
+def main():
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
@@ -37,4 +37,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
