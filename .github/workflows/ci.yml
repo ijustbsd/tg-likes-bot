@@ -106,6 +106,7 @@ jobs:
       - name: Deploy to Yandex SLS Containers
         run: |
           curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          exec bash
           yc --token ${{ secrets.YA_OAUTH }} --folder-id ${{ secrets.YA_FOLDER_ID }} serverless container revisions deploy \
             --container-name tg-likes-bot \
             --memory 1GB \
