@@ -1,6 +1,7 @@
 import logging
 import typing as t
 
+from pydantic import Field
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
@@ -26,6 +27,12 @@ class Settings(BaseSettings):
     RABBITMQ_VHOST: str = ""
 
     RABBITMQ: dict[str, t.Any] = {}
+
+    HOST: str = "127.0.0.1"
+    PORT: int = Field(6969, alias="PORT")
+    URL: str = "localhost"
+    WEBHOOK_SECRET: str = "secret"
+    WEBHOOK_PATH: str = "/webhook"
 
     TG_CHAT_ID: int = 0
 
