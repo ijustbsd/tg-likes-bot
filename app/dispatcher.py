@@ -2,7 +2,10 @@ import datetime as dt
 import logging
 
 from aiogram import Dispatcher
+from aiogram import F
+from aiogram import Router
 from aiogram import types
+from aiogram.filters.command import Command
 from tortoise import exceptions
 from tortoise import transactions
 
@@ -16,24 +19,28 @@ from app.models import Photo
 from app.models import TelegramUser
 from app.models import Vote
 from app.schemas import VoteActionEnum
-from app.schemas import VoteCallbackData
-from app.schemas import vote_callback
+from app.schemas import VoteCallback
 
 logging.basicConfig(level=logging.INFO)
 
-dp = Dispatcher(bot)
+dp = Dispatcher()
+
+router = Router(name=__name__)
 
 
-@dp.callback_query_handler(vote_callback.filter(action=[VoteActionEnum.UP, VoteActionEnum.DOWN]))
+@router.callback_query(VoteCallback.filter(F.action.in_({VoteActionEnum.UP, VoteActionEnum.DOWN})))
 async def vote_callback_handler(
     callback_query: types.CallbackQuery,
-    callback_data: dict[str, str],
+    callback_data: VoteCallback,
 ):
-    vote_callback_data = VoteCallbackData(**callback_data)
+    if callback_query.message is None:
+        await bot.answer_callback_query(callback_query.id, "Что-то пошло не так 💩")
+        return
+
     user, _ = await TelegramUser.get_or_create_from_tg_user(callback_query.from_user)
 
     try:
-        photo = await Photo.get(id=vote_callback_data.message_id).prefetch_related("author")
+        photo = await Photo.get(id=callback_data.message_id).prefetch_related("author")
     except exceptions.DoesNotExist:
         await bot.answer_callback_query(callback_query.id, "Что-то пошло не так 💩")
         return
@@ -43,14 +50,14 @@ async def vote_callback_handler(
         return
 
     async with transactions.in_transaction():
-        vote_value = action_to_vote_value(vote_callback_data.action)
+        vote_value = action_to_vote_value(callback_data.action)
         _, created = await Vote.create_user_vote(user=user, photo=photo, vote_value=vote_value)
 
         if not created:
             await bot.answer_callback_query(callback_query.id, "Первое слово дороже второго!")
             return
 
-        markup = create_like_keyboard_markup(vote_callback_data.message_id, photo.likes, -photo.dislikes)
+        markup = create_like_keyboard_markup(callback_data.message_id, photo.likes, -photo.dislikes)
         await bot.edit_message_reply_markup(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
@@ -59,19 +66,21 @@ async def vote_callback_handler(
         await bot.answer_callback_query(callback_query.id, "Твой голос учтён!")
 
 
-@dp.callback_query_handler(vote_callback.filter(action=[VoteActionEnum.VOTES]))
+@router.callback_query(VoteCallback.filter(F.action == VoteActionEnum.VOTES))
 async def vote_callback_votes_handler(
     callback_query: types.CallbackQuery,
-    callback_data: dict[str, str],
+    callback_data: VoteCallback,
 ):
-    vote_callback_data = VoteCallbackData(**callback_data)
+    if callback_query.message is None:
+        await bot.answer_callback_query(callback_query.id, "Что-то пошло не так 💩")
+        return
 
-    votes = await Vote.filter(photo=vote_callback_data.message_id).prefetch_related("user")
+    votes = await Vote.filter(photo=callback_data.message_id).prefetch_related("user")
     if not votes:
         await bot.send_message(
             chat_id=callback_query.message.chat.id,
             text="Картинку пока никто не оценил 🙈",
-            reply_to_message_id=vote_callback_data.message_id,
+            reply_to_message_id=callback_data.message_id,
             disable_notification=True,
             parse_mode="Markdown",
         )
@@ -84,15 +93,19 @@ async def vote_callback_votes_handler(
     await bot.send_message(
         chat_id=callback_query.message.chat.id,
         text=text,
-        reply_to_message_id=vote_callback_data.message_id,
+        reply_to_message_id=callback_data.message_id,
         disable_notification=True,
         parse_mode="Markdown",
     )
     await callback_query.answer(cache_time=60)
 
 
-@dp.message_handler(content_types=types.ContentTypes.PHOTO)
+@router.message(F.content_type == types.ContentType.PHOTO)
 async def photo_handler(message: types.Message):
+    if message.from_user is None:
+        await message.reply("Не удалось определить автора картинки 🙈")
+        return
+
     author, _ = await TelegramUser.get_or_create_from_tg_user(message.from_user)
     async with transactions.in_transaction():
         await Photo.get_or_create(id=message.message_id, author=author)
@@ -100,7 +113,7 @@ async def photo_handler(message: types.Message):
         await message.reply("Тебе понравилась эта картинка?", reply_markup=reply_markup)
 
 
-@dp.message_handler(commands=["global_rating"])
+@router.message(Command("global_rating"))
 async def global_rating_handler(message: types.Message):
     text = "*Глобальный рейтинг:*\n"
     rating = await get_global_rating()
@@ -111,7 +124,7 @@ async def global_rating_handler(message: types.Message):
     await bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
 
-@dp.message_handler(commands=["rating"])
+@router.message(Command("rating"))
 async def monthly_rating_handler(message: types.Message):
     today: dt.date = dt.datetime.utcnow().date()
     month_name = month_number_to_name(today.month)
@@ -122,3 +135,6 @@ async def monthly_rating_handler(message: types.Message):
         return
     text += "\n".join([f"{name}: {votes}" for name, votes in rating.items()])
     await bot.send_message(message.chat.id, text, parse_mode="Markdown")
+
+
+dp.include_router(router)

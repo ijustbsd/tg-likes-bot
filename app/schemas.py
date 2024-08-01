@@ -1,7 +1,6 @@
 from enum import StrEnum
 
-from aiogram.utils.callback_data import CallbackData
-from pydantic import BaseModel
+from aiogram.filters.callback_data import CallbackData
 
 
 class VoteActionEnum(StrEnum):
@@ -10,9 +9,6 @@ class VoteActionEnum(StrEnum):
     VOTES = "votes"
 
 
-class VoteCallbackData(BaseModel):
+class VoteCallback(CallbackData, prefix="vote_v1"):
     message_id: int
     action: VoteActionEnum
-
-
-vote_callback = CallbackData("vote_v1", *VoteCallbackData.__fields__.keys())
