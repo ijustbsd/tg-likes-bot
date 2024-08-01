@@ -14,7 +14,7 @@ from app.dispatcher import dp
 
 async def on_startup(bot: Bot):
     await init()
-    await bot.set_webhook(f"{settings.URL}/{settings.WEBHOOK_PATH}", secret_token=settings.WEBHOOK_SECRET)
+    await bot.set_webhook(f"{settings.URL}{settings.WEBHOOK_PATH}", secret_token=settings.WEBHOOK_SECRET)
 
 
 async def on_shutdown(bot: Bot):
