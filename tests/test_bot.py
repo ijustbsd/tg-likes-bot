@@ -99,10 +99,7 @@ async def test_vote_callback_handler(
     )
     await photo.save()
 
-    callback_data = {
-        "message_id": photo.id,
-        "action": action,
-    }
+    callback_data = schemas.VoteCallback(message_id=photo.id, action=action)
     with freeze_time("2022-03-17 12:34:56"):
         await dispatcher.vote_callback_handler(callback_query, callback_data)
 
@@ -148,10 +145,7 @@ async def test_vote_callback_handler__vote_already_exist(
     vote = factories.VoteFactory(user=callback_query.message.from_user, photo=photo, value=VALUE)
     await vote.save()
 
-    callback_data = {
-        "message_id": photo.id,
-        "action": action,
-    }
+    callback_data = schemas.VoteCallback(message_id=photo.id, action=action)
     await dispatcher.vote_callback_handler(callback_query, callback_data)
 
     await photo.refresh_from_db()
@@ -189,10 +183,7 @@ async def test_vote_callback_handler__author_vote(
     vote = factories.VoteFactory(user=callback_query.message.from_user, photo=photo, value=VALUE)
     await vote.save()
 
-    callback_data = {
-        "message_id": photo.id,
-        "action": action,
-    }
+    callback_data = schemas.VoteCallback(message_id=photo.id, action=action)
     await dispatcher.vote_callback_handler(callback_query, callback_data)
 
     await photo.refresh_from_db()
@@ -225,10 +216,7 @@ async def test_vote_callback_handler__photo_not_exist(
     await author.save()
     await factories.PhotoFactory(id=42, author=author).save()
 
-    callback_data = {
-        "message_id": 123456789,  # not exist photo's id
-        "action": action,
-    }
+    callback_data = schemas.VoteCallback(message_id=123456789, action=action)  # not exist photo's id
     await dispatcher.vote_callback_handler(callback_query, callback_data)
 
     answer_callback_query_mock.assert_called_with(callback_query.id, "Что-то пошло не так 💩")
@@ -253,10 +241,7 @@ async def test_vote_callback_votes_handler(
     await factories.VoteFactory(user=p1, photo=photo, value=1).save()
     await factories.VoteFactory(user=p2, photo=photo, value=-1).save()
     await factories.VoteFactory(user=p3, photo=photo, value=1).save()
-    callback_data = {
-        "message_id": photo.id,
-        "action": schemas.VoteActionEnum.VOTES,
-    }
+    callback_data = schemas.VoteCallback(message_id=photo.id, action=schemas.VoteActionEnum.VOTES)
 
     await dispatcher.vote_callback_votes_handler(callback_query, callback_data)
 
@@ -280,10 +265,7 @@ async def test_vote_callback_votes_handler__empty_votes(
     await author.save()
     photo = factories.PhotoFactory(author=author)
     await photo.save()
-    callback_data = {
-        "message_id": photo.id,
-        "action": schemas.VoteActionEnum.VOTES,
-    }
+    callback_data = schemas.VoteCallback(message_id=photo.id, action=schemas.VoteActionEnum.VOTES)
 
     await dispatcher.vote_callback_votes_handler(callback_query, callback_data)
 
