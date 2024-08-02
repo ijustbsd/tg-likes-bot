@@ -19,15 +19,6 @@ class Settings(BaseSettings):
 
     TORTOISE_ORM: dict[str, t.Any] = {}
 
-    RABBITMQ_PROTOCOL: str = "amqp"
-    RABBITMQ_HOST: str = "localhost"
-    RABBITMQ_PORT: int = 5672
-    RABBITMQ_USER: str = "bot"
-    RABBITMQ_PASSWORD: str = "bot"
-    RABBITMQ_VHOST: str = ""
-
-    RABBITMQ: dict[str, t.Any] = {}
-
     HOST: str = "127.0.0.1"
     PORT: int = Field(6969, alias="PORT")
     URL: str = "localhost"
@@ -63,22 +54,8 @@ class Settings(BaseSettings):
         }
         return self
 
-    @model_validator(mode="after")
-    def set_rabbitmq(self) -> t.Self:
-        self.RABBITMQ = {
-            "protocol": self.RABBITMQ_PROTOCOL,
-            "host": self.RABBITMQ_HOST,
-            "port": self.RABBITMQ_PORT,
-            "user": self.RABBITMQ_USER,
-            "password": self.RABBITMQ_PASSWORD,
-            "vhost": self.RABBITMQ_VHOST,
-        }
-        return self
-
 
 settings = Settings()
 
 # для aerich
 TORTOISE_ORM = settings.TORTOISE_ORM
-
-CELERY_BROKER_URL = "{protocol}://{user}:{password}@{host}:{port}/{vhost}".format_map(settings.RABBITMQ)
