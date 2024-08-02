@@ -32,6 +32,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Make version
+        run: |
+          echo -n $(git describe --tags --always | cut -c 2-) > version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: version
+
   build:
     needs:
       - version
@@ -43,14 +52,15 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
+          name: version
+          path: version
 
       - name: Build and push Docker image
         id: build
         run: |
-          VERSION=$(git describe --tags --always | cut -c 2-)
+          VERSION=$(cat version)
           docker build . --file Dockerfile --tag $GH_IMAGE_ID:$VERSION --tag $GH_IMAGE_ID:latest
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker push $GH_IMAGE_ID:$VERSION
@@ -97,9 +107,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: version
+          path: version
+
       - name: Deploy to Yandex SLS Containers
         run: |
-          VERSION=$(git describe --tags --always | cut -c 2-)
+          VERSION=$(cat version)
           docker pull $GH_IMAGE_ID:$VERSION
           echo "${{ secrets.YA_OAUTH }}" | docker login cr.yandex -u oauth --password-stdin
           docker tag $GH_IMAGE_ID:$VERSION $YA_IMAGE_ID:$VERSION
