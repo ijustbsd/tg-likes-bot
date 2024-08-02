@@ -107,11 +107,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: version
-          path: /tmp/artifacts/
-
       - name: Deploy to Yandex SLS Containers
         run: |
           curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
