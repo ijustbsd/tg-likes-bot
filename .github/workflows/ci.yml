@@ -124,16 +124,21 @@ jobs:
           docker tag $GH_IMAGE_ID:$VERSION $YA_IMAGE_ID:$VERSION
           docker push $YA_IMAGE_ID:$VERSION
           curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          ~/yandex-cloud/bin/yc --token ${{ secrets.YA_OAUTH }} --folder-id ${{ secrets.YA_FOLDER_ID }} serverless container revisions deploy \
+          YC_AUTH='--token ${{ secrets.YA_OAUTH }} --folder-id ${{ secrets.YA_FOLDER_ID }}'
+          SECRET_ID=$(~/yandex-cloud/bin/yc $YC_AUTH --format json lockbox secret get --name tg-likes-bot | jq -r '.id')
+          SECRETS=$(~/yandex-cloud/bin/yc $YC_AUTH --format json lockbox secret get --name tg-likes-bot | jq -r '.current_version.payload_entry_keys.[]' | while read key; do echo -n "--secret id=$SECRETS,environment-variable=$key,key=$key "; done)
+          ~/yandex-cloud/bin/yc $YC_AUTH serverless container revisions deploy \
             --container-name tg-likes-bot \
-            --memory 1GB \
+            --description $VERSION \
+            --memory 256MB \
             --cores 1 \
-            --core-fraction 20 \
+            --core-fraction 5 \
             --execution-timeout 5s \
-            --concurrency 10 \
+            --concurrency 8 \
             --service-account-id ${{ secrets.YA_SERVICE_ACCOUNT_ID }} \
             --image $YA_IMAGE_ID:$VERSION \
             --command python \
             --args run.py \
+            $SECRETS \
             --zone-instances-limit 1 \
             --log-group-name tg-likes-bot
