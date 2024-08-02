@@ -103,8 +103,6 @@ jobs:
   #         # scripts/test.sh
 
   deploy:
-    needs:
-      - build
 
     runs-on: ubuntu-latest
 
